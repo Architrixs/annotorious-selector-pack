@@ -28,6 +28,8 @@ export default class RubberbandLine {
     this.inner.setAttribute('class', 'a9s-inner');
 
     this.setPoints(this.points);
+    
+
     this.mask = new Mask(env.image, this.inner);
 
     // TODO optional: mask to dim the outside area
@@ -39,7 +41,8 @@ export default class RubberbandLine {
     // Additionally, selection remains hidden until 
     // the user actually moves the mouse
     this.group.style.display = 'none';
-
+    console.log(this.mask)
+    console.log(this.Line)
     // TODO optional: mask to dim the outside area
     // this.group.appendChild(this.mask.element);
     this.group.appendChild(this.mask.element);
@@ -85,6 +88,7 @@ export default class RubberbandLine {
       this.points[2] = xy[0];
       this.points[3] = xy[1];
       this.setPoints(this.points);
+      this.setPerendicular(this.points);
     }
   }
 
@@ -119,5 +123,32 @@ export default class RubberbandLine {
         name: 'line'
       }
     });
+
+    setPerendicular = (points) => {
+      //find midpoint
+      var midpointX = (points[0] + points[2])/2
+      var midpointY = (points[1] + points[3])/2
+      //Calculate the angle of the main line
+      var angle = Math.atan2(points[3] - points[1], points[2] - points[0]);
+      // get perpendicular point at 90 degrees to the main line at the midpoint perpLength point far
+      var perpLength = 100
+      var perpX = midpointX + perpLength * Math.cos(angle - Math.PI / 2);
+      var perpY = midpointY + perpLength * Math.sin(angle - Math.PI / 2);
+  
+      console.log(midpointX, midpointY, angle, perpX, perpY)
+      // create the perpendicular line
+      this.perp = document.createElementNS(SVG_NAMESPACE, 'line');
+      this.perp.setAttribute('class', 'a9s-perp');
+      this.perp.setAttribute('x1', midpointX);
+      this.perp.setAttribute('y1', midpointY);
+      this.perp.setAttribute('x2', perpX);
+      this.perp.setAttribute('y2', perpY);
+      // stroke="black" stroke-width="2" stroke-dasharray="5,5"\
+      this.perp.setAttribute('stroke', 'black');
+      this.perp.setAttribute('stroke-width', '2');
+      this.perp.setAttribute('stroke-dasharray', '5,5');
+      this.Line.appendChild(this.perp);
+      this.group.appendChild(this.perp);
+    }
 
 }

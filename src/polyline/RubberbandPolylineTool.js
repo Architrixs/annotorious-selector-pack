@@ -1,11 +1,11 @@
 import Tool from '@recogito/annotorious/src/tools/Tool';
-import RubberbandLine from './RubberbandLine';
-import EditableLine from './EditableLine';
+import RubberbandPolyline from './RubberbandPolyline';
+import EditablePolyline from './EditablePolyline';
 
 /**
- * A rubberband selector for Line fragments.
+ * A rubberband selector for Polyline fragments.
  */
-export default class RubberbandLineTool extends Tool {
+export default class RubberbandPolylineTool extends Tool {
 
   constructor(g, config, env) {
     super(g, config, env);
@@ -29,9 +29,10 @@ export default class RubberbandLineTool extends Tool {
     this.attachListeners({
       mouseMove: this.onMouseMove,
       mouseUp: this.onMouseUp,
+      dblClick: this.onDblClick
     });
     
-    this.rubberband = new RubberbandLine([ x, y ], this.g, this.env);
+    this.rubberband = new RubberbandPolyline([ x, y ], this.g, this.env);
   }
 
   stop = () => {
@@ -72,23 +73,24 @@ export default class RubberbandLineTool extends Tool {
       // const minWidth = this.config.minSelectionWidth || 4;
       // const minHeight = this.config.minSelectionHeight || 4;
       
-      if (this.rubberband.points.length == 2) {
+      if (this.rubberband.points.length >= 2) {
         this.rubberband.addPoint([ x, y ]); 
         // check if both coordinates are same
         if (this.rubberband.points[0] == this.rubberband.points[2] && this.rubberband.points[1] == this.rubberband.points[3]) {
           this.emit('cancel');
           this.stop();
         }
-        else{
-          this._isDrawing = false;
-          const shape = this.rubberband.element;
-          shape.annotation = this.rubberband.toSelection();
-          console.log(shape.annotation);
-          this.emit('complete', shape);
-          this.stop();
-        }
+
       }
     }
+  }
+
+  onDblClick = evt => {
+    this._isDrawing = false;
+    const shape = this.rubberband.element;
+    shape.annotation = this.rubberband.toSelection();
+    this.emit('complete', shape);
+    this.stop();
   }
   
 
@@ -101,14 +103,14 @@ export default class RubberbandLineTool extends Tool {
   }
 
   createEditableShape = annotation => 
-    new EditableLine(annotation, this.g, this.config, this.env);
+    new EditablePolyline(annotation, this.g, this.config, this.env);
 
 }
 
-RubberbandLineTool.identifier = 'line';
+RubberbandPolylineTool.identifier = 'polyline';
 
-RubberbandLineTool.supports = annotation => {
+RubberbandPolylineTool.supports = annotation => {
   const selector = annotation.selector('SvgSelector');
   if (selector)
-    return selector.value?.match(/^<svg.*<line/g);
+    return selector.value?.match(/^<svg.*<polyline/g);
 }
