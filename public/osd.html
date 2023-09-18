@@ -69,22 +69,55 @@
         var anno = OpenSeadragon.Annotorious(viewer, {
           locale: 'auto',
           allowEmpty: true,
-          gigapixelMode: true
+          gigapixelMode: false,
+          crosshair: true
         });
 
-        Annotorious.SelectorPack(anno);
+        Annotorious.SelectorPack(anno, {
+          tools: ['circle', 'ellipse', 'rect', 'freehand', 'polygon', 'line', 'polyline']
+        });
 
-        anno.setDrawingTool('line');
+        var tools = anno.listDrawingTools();
+        var selected = 0;
+        var toolToggle = document.getElementById('current-tool');
+        toolToggle.addEventListener('click', function() {   
+
+          selected += 1;
+          selected = selected % tools.length;
+
+          var tool = tools[selected];
+          toolToggle.innerHTML = "TOOL: " + tool.toUpperCase();
+          anno.setDrawingTool(tool);
+        });
+
+        var modeBtn = document.getElementById('mode');
+        modeBtn.addEventListener('click', function() {
+          if (modeBtn.innerHTML == 'MODE: VIEW') {
+            modeBtn.innerHTML = 'MODE: ANNOTATE';
+            anno.setDrawingEnabled(true);
+          } else {
+            modeBtn.innerHTML = 'MODE: VIEW';
+            anno.setDrawingEnabled(false);
+          }
+        });
       }
     </script>
   </head>
   <body>
     <div class="column">
       <h1>Annotorious | OpenSeadragon Example</h1>
+      <p class="instructions">
+        Click the annotation to edit. Hold <strong>SHIFT</strong> while clicking and 
+        dragging the mouse to create a new annotation. 
+      </p>
+      <p>
+        <button id="current-tool">TOOL: RECT</button>
+        <button id="mode">MODE: VIEW</button>
+      </p>
       <div id="openseadragon" style="width: 640px; height: 480px;"></div>
     </div>      
-    <script src="https://cdn.jsdelivr.net/npm/openseadragon@2.4.2/build/openseadragon/openseadragon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.5.16/dist/openseadragon-annotorious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.7.12/dist/openseadragon-annotorious.min.js"></script>
     <script src="annotorious-selector-pack.js"></script>
   </body>
 </html>

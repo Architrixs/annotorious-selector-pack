@@ -62,7 +62,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin ({
-      template: resolveAppPath('public/index.html')
+      template: resolveAppPath('public/osd.html')
     })
   ]
 }
