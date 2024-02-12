@@ -5,6 +5,7 @@ import RubberbandFreehandTool from './freehand/RubberbandFreehandTool';
 import RubberbandMultipolygonTool from './multipolygon/RubberbandMultipolygonTool';
 import RubberbandLineTool from './line/RubberbandLineTool';
 import RubberbandPolylineTool from './polyline/RubberbandPolylineTool';
+import RubberbandCustomLine from './customline/RubberbandCustomLineTool';
 const ALL_TOOLS = new Set([
   'point',
   'circle',
@@ -12,6 +13,7 @@ const ALL_TOOLS = new Set([
   'freehand',
   'line',
   'polyline',
+  'customline'
   // 'multipolygon' // exclude from defaults for now
 ]);
 
@@ -42,6 +44,9 @@ const SelectorPack = (anno, config) => {
 
     if (tool === 'polyline')
       anno.addDrawingTool(RubberbandPolylineTool);
+
+    if (tool === 'customline')
+      anno.addDrawingTool(RubberbandCustomLine);
   });
 
 }

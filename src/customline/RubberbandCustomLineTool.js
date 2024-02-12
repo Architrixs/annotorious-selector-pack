@@ -1,11 +1,11 @@
 import Tool from '@recogito/annotorious/src/tools/Tool';
-import RubberbandPolyline from './RubberbandPolyline';
-import EditablePolyline from './EditablePolyline';
+import RubberbandCustomLine from './RubberbandCustomLine';
+import EditableCustomLine from './EditableCustomLine';
 
 /**
- * A rubberband selector for Polyline fragments.
+ * A rubberband selector for CustomLine fragments.
  */
-export default class RubberbandPolylineTool extends Tool {
+export default class RubberbandCustomLineTool extends Tool {
 
   constructor(g, config, env) {
     super(g, config, env);
@@ -32,7 +32,7 @@ export default class RubberbandPolylineTool extends Tool {
       dblClick: this.onDblClick
     });
     
-    this.rubberband = new RubberbandPolyline([ x, y ], this.g, this.env);
+    this.rubberband = new RubberbandCustomLine([ x, y ], this.g, this.env);
   }
 
   stop = () => {
@@ -88,9 +88,11 @@ export default class RubberbandPolylineTool extends Tool {
   }
 
   onDblClick = evt => {
+    this.rubberband.removeLastPath();
     this._isDrawing = false;
     const shape = this.rubberband.element;
     shape.annotation = this.rubberband.toSelection();
+
     this.emit('complete', shape);
     this.stop();
   }
@@ -105,14 +107,14 @@ export default class RubberbandPolylineTool extends Tool {
   }
 
   createEditableShape = annotation => 
-    new EditablePolyline(annotation, this.g, this.config, this.env);
+    new EditableCustomLine(annotation, this.g, this.config, this.env);
 
 }
 
-RubberbandPolylineTool.identifier = 'polyline';
+RubberbandCustomLineTool.identifier = 'customline';
 
-RubberbandPolylineTool.supports = annotation => {
+RubberbandCustomLineTool.supports = annotation => {
   const selector = annotation.selector('SvgSelector');
   if (selector)
-    return selector.value?.match(/^<svg.*<polyline/g);
+    return selector.value?.match(/^<svg.*<g/g);
 }

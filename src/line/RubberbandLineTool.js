@@ -83,7 +83,6 @@ export default class RubberbandLineTool extends Tool {
           this._isDrawing = false;
           const shape = this.rubberband.element;
           shape.annotation = this.rubberband.toSelection();
-          console.log(shape.annotation);
           this.emit('complete', shape);
           this.stop();
         }

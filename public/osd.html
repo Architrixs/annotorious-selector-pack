@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>Annotorious OpenSeadragon Example</title>
     <link href="https://fonts.googleapis.com/css?family=Lato&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.5.16/dist/annotorious.min.css" rel="stylesheet">
+    <link href="osd.css" rel="stylesheet">
     <style>
       html, body {
         margin:0;
@@ -48,6 +48,13 @@
       .column .a9s-annotation.a9s-point .a9s-outer {
         fill:#fff;
       }
+
+
+text {
+  font-size: 35px;
+  fill: red;
+  dominant-baseline: central
+}
     </style>
     <script>
       window.onload = function() {
@@ -65,16 +72,120 @@
           showFlipControl: true,
           constrainDuringPan: true,
         });
+        var ColorSelectorWidget = function(args) {
+                    // 3. Triggers callbacks on user action
+                    console.log(args.annotation.bodies);
+          var allTextPaths = [];
+          var addTag = function(evt) {
+            console.log(evt);
+            // GET THE target button
+            var button = evt.target;
+            // toggle the inner text between ⬆ and ⬇ and ⬆⬇
+            if (button.innerHTML == '⬆') {
+              button.innerHTML = '⬇';
+            } else if (button.innerHTML == '⬇') {
+              button.innerHTML = '⬆⬇';
+            } else {
+              button.innerHTML = '⬆';
+            }
+            // find all textPath elements with the same href as button.dataset.tag
+            var textPaths = document.querySelectorAll('textPath[href="' + button.dataset.tag + '"]');
+            // for each of these, change innerHTML to button.innerHTML
+            for (var i = 0; i < textPaths.length; i++) {
+              textPaths[i].innerHTML = button.innerHTML;
+            }
+
+            // get parent of textPath
+            var parentText = textPaths[0].parentElement;
+            // change args.annotation.underlying.target.selector.value to reflect the change using regex and allTextPaths
+            var selectorValue = args.annotation.underlying.target.selector.value;
+            // get the string using allTextPaths by appending
+            var string = '';
+            for (var i = 0; i < allTextPaths.length; i++) {
+              string += allTextPaths[i].outerHTML;
+            }
+
+            // replace the string in selectorValue with string everything between <text> and </text>
+            // parse selectorValue to html and replace the innerHTML of the text element using allTextPaths and then stringify
+            var newSelectorValue = new DOMParser().parseFromString(selectorValue, "text/xml").childNodes[0];
+            // get the text element
+            var textElement = newSelectorValue.getElementsByTagName('text')[0];
+            // replace the innerHTML of textElement with string
+            textElement.outerHTML = parentText.outerHTML;
+
+            // stringify the newSelectorValue
+            newSelectorValue = new XMLSerializer().serializeToString(newSelectorValue);
+            // replace the selectorValue with newSelectorValue
+            args.annotation.underlying.target.selector.value = newSelectorValue;
+
+
+          }
+          var createButton = function(value, href) {
+            var button = document.createElement('button');
+
+            button.dataset.tag = href;
+            button.innerHTML = value;
+            button.addEventListener('click', addTag); 
+            return button;
+          }
+          // find the renderedVia.name in args.Annotation.underlyig.target
+          var container = document.createElement('div');
+          container.className = 'direction-widget';
+          var name = args.annotation.underlying.target?.renderedVia?.name;
+          if (name == 'customline'){
+            // get all  textpath elements from selector.value using all content between <text> and </text>
+            allTextPaths = args.annotation.underlying.target.selector.value.match(/<textPath.*?>(.*?)<\/textPath>/g);
+            console.log(allTextPaths);
+
+           
+            // for each of these create a button with innerHTML of textPath
+            for (var i = 0; i < allTextPaths.length; i++) {
+              // typecast to HTMLElement to access innerHTML
+              allTextPaths[i] = new DOMParser().parseFromString(allTextPaths[i], "text/xml").childNodes[0];
+              var href = allTextPaths[i].getAttribute('href');
+              container.appendChild(createButton(allTextPaths[i].innerHTML, href));
+            }
+            
+          }
+          return container;
+        }
+
+        var ColorFormatter = function(annotation) {
+          // update annotation
+
+        }
         
         var anno = OpenSeadragon.Annotorious(viewer, {
           locale: 'auto',
           allowEmpty: true,
           gigapixelMode: false,
-          crosshair: true
+          crosshair: true,
+          // widgets: [ 
+          //   ColorSelectorWidget,
+          // ],
+          // formatter: ColorFormatter
         });
 
         Annotorious.SelectorPack(anno, {
-          tools: ['circle', 'ellipse', 'rect', 'freehand', 'polygon', 'line', 'polyline']
+          tools: ['circle', 'ellipse', 'rect', 'freehand', 'polygon', 'customline', 'polyline' ]
+        });
+
+        document.addEventListener('contextmenu', function(evt) {
+          evt.preventDefault();
+          evt.stopPropagation();
+
+          const targetTag = evt.target.tagName
+          const id = evt.target.id
+          if (targetTag === 'path'){
+            const textElement = evt.target.parentNode.querySelector('text');
+            // get the textPath element with the href as id of the path element
+            const textPath = textElement.querySelector(`textPath[href="#${id}"]`)
+            console.log(textPath)
+
+          }
+          else if (targetTag === 'textPath'){
+            console.log(evt.target)
+          }
         });
 
         var tools = anno.listDrawingTools();
@@ -86,6 +197,9 @@
           selected = selected % tools.length;
 
           var tool = tools[selected];
+          if (tool == undefined) {
+            tool = 'customline'
+          }
           toolToggle.innerHTML = "TOOL: " + tool.toUpperCase();
           anno.setDrawingTool(tool);
         });
@@ -106,6 +220,16 @@
   <body>
     <div class="column">
       <h1>Annotorious | OpenSeadragon Example</h1>
+      <!-- <svg viewBox="0 0 500 500" width="300px" height="300px">
+        <path class="link" id="path1"  d='M0,0 L100, 100'></path>
+        <path id="path2"  d='M100,100 L30, 200'   />
+        <text><textPath class="a9s-text" id="text1" xlink:href="#path1" startOffset="40%">⬆</textPath><textPath class="a9s-text" id="text3" xlink:href="#path2" startOffset="40%">⬆</textPath><textPath class="a9s-text" id="text4" xlink:href="#path3" startOffset="40%">⬆</textPath><textPath class="a9s-text" id="text5" xlink:href="#path4" startOffset="40%">⬆</textPath></text>
+        <text >
+          
+          <textPath xlink:href="#path1" startOffset="40%" side="right">⬆</textPath>
+          <textPath xlink:href="#path2" startOffset="30%">⬆️</textPath>
+        </text>
+      </svg> -->
       <p class="instructions">
         Click the annotation to edit. Hold <strong>SHIFT</strong> while clicking and 
         dragging the mouse to create a new annotation. 
@@ -114,10 +238,11 @@
         <button id="current-tool">TOOL: RECT</button>
         <button id="mode">MODE: VIEW</button>
       </p>
-      <div id="openseadragon" style="width: 640px; height: 480px;"></div>
+      <div oncontextmenu="return false;" (auxclick)="return false;" id="openseadragon" style="width: 640px; height: 480px;"></div>
     </div>      
     <script src="https://cdn.jsdelivr.net/npm/openseadragon@4.1/build/openseadragon/openseadragon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.7.12/dist/openseadragon-annotorious.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.7.12/dist/openseadragon-annotorious.min.js"></script> -->
+    <script src="openseadragon-annotorious.min.js"></script>
     <script src="annotorious-selector-pack.js"></script>
   </body>
 </html>
